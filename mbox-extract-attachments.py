@@ -6,12 +6,13 @@ __date__ = "6/9/2022"
 import mailbox
 import base64
 import os
+from sre_parse import Verbose
 import sys
 import email
 
 
 BLACKLIST = ('signature.asc', 'message-footer.txt', 'smime.p7s')
-VERBOSE = 2
+VERBOSE = 1 # 0 = silent, 1 = verbose, 2 = debug
 
 attachments = 0 #Count extracted attachment
 skipped = 0
@@ -47,7 +48,8 @@ def extract_attachment(payload):
 		# quoted-printable
 		# what else? ...
 
-		print("Extracting %s (%d bytes)\n" %(filename, len(content)))
+		if (VERBOSE >= 1):
+			print("Extracting %s (%d bytes)\n" %(filename, len(content)))
 
 		n = 1
 		orig_filename = filename
@@ -71,12 +73,8 @@ def extract_attachment(payload):
 			for payl in payload.get_payload():
 				extract_attachment(payl)
 
-
-###
-print("Extract attachments from mbox files")
-print("Copyright (C) 2012 Pablo Castellano")
-print("This program comes with ABSOLUTELY NO WARRANTY.")
-print("This is free software, and you are welcome to redistribute it under certain conditions.")
+if (VERBOSE >= 1):
+	print("Extract attachments from mbox files")
 
 if len(sys.argv) < 2 or len(sys.argv) > 3:
 	print("Usage: %s <mbox_file> [directory]" %sys.argv[0])
@@ -97,15 +95,12 @@ if len(sys.argv) == 3:
 		sys.exit(1)
 
 mb = mailbox.mbox(filename)
-# print("Mbox file has %d messages" %mb.__len__())
-# nmes = len(mb)
 
 os.chdir(directory)
-# print("here")
 
-# for i in range(mb.__len__()):
-for i in range(1):
-	print("message %d" %i)
+for i in range(mb.__len__()):
+	if (VERBOSE >= 1):
+		print("message %d" %i)
 	if (VERBOSE >= 2):
 		print("Analyzing message number", i)
 
@@ -140,6 +135,7 @@ for i in range(1):
 	else:
 		extract_attachment(em)
 
-print("\n--------------")
-print("Total attachments extracted:", attachments)
-print("Total attachments skipped:", skipped)
+if (VERBOSE >= 1):
+	print("\n--------------")
+	print("Total attachments extracted:", attachments)
+	print("Total attachments skipped:", skipped)
